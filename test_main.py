@@ -54,3 +54,20 @@ def test_auto_raise_should_never_result_in_exceeded_max():
 
     for bid in auction.bids:
         assert bid.amount <= bid.max_amount
+
+
+def test_auto_raise_should_not_result_in_crazy():
+    auction = Auction()
+
+    bids = [
+        Bid(user=4, amount=7, max_amount=78, auto=False),
+        Bid(user=6, amount=56, max_amount=96, auto=False),
+        Bid(user=9, amount=81, max_amount=90, auto=False)
+    ]
+
+    for bid in bids:
+        auction.new_bid(bid)
+
+    assert auction.leader is not None
+    assert auction.leader.user == 6
+    assert auction.leader.amount == 91
