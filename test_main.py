@@ -28,7 +28,7 @@ def test_auto_raise_first_bidder_should_win():
 
     auction.new_bid(Bid(2,11,15))
 
-    assert auction.leader == Bid(1,16,20)
+    assert auction.leader == Bid(1,16,20,True)
 
 
 def test_auto_raise_seconde_bidder_should_win():
@@ -38,7 +38,7 @@ def test_auto_raise_seconde_bidder_should_win():
     auction.new_bid(Bid(2,17,23))
 
     print(auction.bids)
-    assert auction.leader == Bid(2,21,23)
+    assert auction.leader == Bid(2,21,23,True)
 
 
 def test_auto_raise_should_never_result_in_exceeded_max():
@@ -67,6 +67,8 @@ def test_auto_raise_should_not_result_in_crazy():
 
     for bid in bids:
         auction.new_bid(bid)
+
+    print(auction.bids)
 
     assert auction.leader is not None
     assert auction.leader.user == 6

@@ -41,14 +41,15 @@ class Auction:
         bid = self.bids[-1]
         higher_bids = sorted(filter(lambda x: x.max_amount > bid.amount, self.bids), key=lambda x: x.max_amount)
         
-        for bid_to_raise in higher_bids[:-1]:
-            auto_bid = copy(bid_to_raise)
-            auto_bid.amount = auto_bid.max_amount
-            auto_bid.auto = True
-            self.bids.append(auto_bid)
-        
         if higher_bids:
+            for bid_to_raise in higher_bids[:-1]:
+                auto_bid = copy(bid_to_raise)
+                auto_bid.amount = auto_bid.max_amount
+                auto_bid.auto = True
+                self.bids.append(auto_bid)
+
             new_leader = higher_bids[-1]
+            
             if self.bids[-1] != new_leader:
                 auto_bid = copy(new_leader)
                 # auto_bid.amount = self.bids[-1].amount + 1
