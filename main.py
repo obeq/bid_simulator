@@ -120,48 +120,58 @@ def main(interactive = False):
     user_count = click.prompt("How many bidders?", type=int)
 
     print(f"{user_count} bidders selected.")
-    auction = Auction()
 
-    MAX_BID = 100
+    MAX_BID = 1000
     MAX_INCREMENT = 10
     MAX_MAX_INCREMENT = 10
-    CHAOS = True
+    CHAOS = False
 
-    while True:
-        print(auction.bids)
-        print("_______")
+    with click.progressbar(range(0,10000)) as bar:
+        for i in bar:
+            auction = Auction()
+            while True:
+                # print(auction.bids)
+                # print("_______")
 
-        if interactive:
-            user = click.prompt("Who will make the next bid?", type=int, default=randint(0, user_count))
-        else:
-            user = randint(0, user_count)
-        
-        if user >= 0 and user < user_count:
-            if interactive:
-                amount = click.prompt("How much are they bidding?", type=int, default=randint(0, MAX_BID))
-                max_amount = click.prompt("How far are they willing to go?", default=randint(0, MAX_BID))
-            else:
-                amount = randint(0, MAX_BID)
-                max_amount = randint(0, MAX_BID)
+                if interactive:
+                    user = click.prompt("Who will make the next bid?", type=int, default=randint(0, user_count))
+                else:
+                    user = randint(0, user_count)
+                
+                if user >= 0 and user < user_count:
+                    if interactive:
+                        amount = click.prompt("How much are they bidding?", type=int, default=randint(0, MAX_BID))
+                        max_amount = click.prompt("How far are they willing to go?", default=randint(0, MAX_BID))
+                    else:
+                        if CHAOS:
+                            amount = randint(0, MAX_BID)
+                            max_amount = randint(0, MAX_BID)
+                        else:
+                            if auction.leader:
+                                amount = auction.leader.amount + randint(0, MAX_INCREMENT)
+                            else:
+                                amount = randint(0, MAX_BID)
+                            max_amount = amount + randint(0, MAX_MAX_INCREMENT)
 
-            bid = Bid(user, amount, max_amount)
+                    bid = Bid(user, amount, max_amount)
 
-            try:
-                auction.new_bid(bid)
-            except ValueError as e:
-                print(e)
+                    try:
+                        auction.new_bid(bid)
+                    except ValueError as e:
+                        # print(e)
+                        pass
 
-            try:
-                check_sanity(auction=auction)
-            except AssertionError as e:
-                print(auction.bids)
-                print_exc()
-                print_stack()
-                break
+                    try:
+                        check_sanity(auction=auction)
+                    except AssertionError as e:
+                        print(auction.bids)
+                        print_exc()
+                        print_stack()
+                        raise
 
-            if auction.leader and auction.leader.amount > 95:
-                print(auction.bids)
-                break
+                    if auction.leader and auction.leader.amount > MAX_BID * 0.9:
+                        # print(auction.bids)
+                        break
 
 
 if __name__=='__main__':
