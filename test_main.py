@@ -56,6 +56,16 @@ def test_auto_raise_should_never_result_in_exceeded_max():
         assert bid.amount <= bid.max_amount
 
 
+def test_disregard_lower_maxes():
+    auction = Auction()
+
+    auction.new_bid(Bid(user=5, amount=5, max_amount=68, auto=False))
+    auction.new_bid(Bid(user=5, amount=8, max_amount=66, auto=False))
+
+    assert auction.bids[0].max_amount == 68
+    assert auction.bids[1].max_amount == 68
+
+
 def test_auto_raise_should_not_result_in_crazy():
     auction = Auction()
 

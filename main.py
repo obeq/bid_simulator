@@ -15,7 +15,7 @@ class Bid:
 
 class Auction:
     def __init__(self):
-        self.bids = []
+        self.bids: list[Bid] = []
 
     def sanity_check(self):
         pass
@@ -27,6 +27,10 @@ class Auction:
         return False
 
     def new_bid(self, bid: Bid):
+        for old_bid in self.bids:
+            if bid.user == old_bid.user:
+                bid.max_amount = max(bid.max_amount, old_bid.max_amount)
+
         if bid.max_amount < bid.amount:
             raise(ValueError("Max amount can't be lower than bid amount."))
         if leader := self.leader:
@@ -39,23 +43,44 @@ class Auction:
             
     def auto_bid(self):
         bid = self.bids[-1]
-        higher_bids = sorted(filter(lambda x: x.max_amount > bid.amount, self.bids), key=lambda x: x.max_amount)
-        
-        if higher_bids:
-            for bid_to_raise in higher_bids[:-1]:
-                auto_bid = copy(bid_to_raise)
-                auto_bid.amount = auto_bid.max_amount
-                auto_bid.auto = True
-                self.bids.append(auto_bid)
 
-            new_leader = higher_bids[-1]
-            
-            if self.bids[-1] != new_leader:
-                auto_bid = copy(new_leader)
-                # auto_bid.amount = self.bids[-1].amount + 1
-                auto_bid.amount = min(self.bids[-1].amount + 1, auto_bid.max_amount)
-                auto_bid.auto = True
-                self.bids.append(auto_bid)
+        max_amounts = sorted(self.bids, key=lambda x: x.max_amount, reverse=True)
+        max_amounts = [b for b in max_amounts if b.max_amount >= bid.amount]
+
+        winner = max_amounts[0]
+        runner_up = None
+        for runner_up_bid in max_amounts[1:]:
+            if runner_up_bid.user != winner.user:
+                runner_up = runner_up_bid
+                break
+
+        if runner_up is None:
+            return
+        # if winner.user == bid.user:
+        #     return
+
+        autobids = []
+
+        winning_bid = Bid(
+            user=winner.user,
+            amount=min(runner_up.max_amount + 1, winner.max_amount),
+            max_amount=winner.max_amount,
+            auto=True
+        )
+        autobids.append(winning_bid)
+        
+        outbid_users = { winning_bid.user }
+
+        for bid in max_amounts[1:]:
+            if bid.user in outbid_users:
+                continue
+            outbid_users.add(bid.user)
+
+            autobid = Bid(bid.user, bid.max_amount, bid.max_amount, True)
+            autobids.append(autobid)
+        
+        for bid in autobids[::-1]:
+            self.bids.append(bid)
 
     def get_highest_max(self):
         """Returns the bids with the highest max_amount"""
